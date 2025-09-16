@@ -3,7 +3,7 @@
 [![Topological Sorting](https://img.shields.io/badge/Algorithm-Topological_Sorting-blue)](https://en.wikipedia.org/wiki/Topological_sorting)
 > Automatically orders Laravel migration files based on database dependency relationships to eliminate foreign key constraint errors
 ```bash
-composer require your-vendor/migration-orderer
+composer require zitansmail/migration-orderer
 ```
 ## 🚀 Key Features
 - 🔍 **Dependency Scanning** - Detects foreign keys across migration files
@@ -17,7 +17,7 @@ composer require your-vendor/migration-orderer
 ## 📦 Installation
 1. Install via Composer:
 ```bash
-composer require your-vendor/migration-orderer
+composer require zitansmail/migration-orderer
 ```
 2. If Laravel doesn't auto-discover the package, register the service provider in `config/app.php`:
 ```php
