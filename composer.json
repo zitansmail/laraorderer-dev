@@ -1,5 +1,5 @@
 {
-  "name": "yourname/migration-orderer",
+  "name": "zitansmail/migration-orderer",
   "description": "Order Laravel migrations before execution",
   "type": "library",
   "license": "MIT",
