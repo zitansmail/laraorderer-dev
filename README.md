@@ -83,61 +83,7 @@ After --reorder:
 4. **Document custom paths** for team members
 5. **Resolve circular dependencies** before processing
 6. **Avoid production use** - Recommended for development only
-## 🚨 Troubleshooting
-**Problem:** "Class not found" after renaming  
-**Solution:** Run `composer dump-autoload`
-**Problem:** Circular dependency detected  
-**Solution:** 
-```php
-/**
- * @depends App\Database\Migrations\CreateUsersTable
- */
-class CreateProfilesTable extends Migration
-{
-    // Manual dependency declaration
-}
-```
-**Problem:** Migrations not found  
-**Solution:** Verify `--path` points to correct directory:
-```bash
-php artisan migrate:ordered --path=database/migrations/v2 --dry-run
-```
-**Problem:** Foreign key errors persist  
-**Solution:** Check for typos in table names and column references
-## ❓ FAQ
-**Q: Will my migration code be modified?**  
-A: No - only filenames are changed. Your schema code remains untouched.
-**Q: How are timestamp collisions handled?**  
-A: The package uses microsecond precision to ensure unique timestamps.
-**Q: Can I use manual dependencies?**  
-A: Yes - add docblock comments:
-```php
-/**
- * @depends App\Database\Migrations\CreateCountriesTable
- */
-```
-**Q: Is this compatible with Laravel 10?**  
-A: Yes - supports Laravel 8.x through 10.x
-**Q: What about pivot tables?**  
-A: Automatically detected through `->on()` references
-## 📜 Sample Workflow
-```mermaid
-sequenceDiagram
-    participant User
-    participant Artisan
-    participant Package
-    participant DB
-    
-    User->>Artisan: php artisan migrate:ordered --reorder
-    Artisan->>Package: Scan migrations
-    Package->>Package: Build dependency graph
-    Package->>Package: Topological sort
-    Package->>Package: Rename files
-    Package->>DB: Update migrations table
-    DB-->>Package: Update confirmation
-    Package-->>Artisan: Success message
-    Artisan-->>User: Migrations reordered!
-```
+
 ## 📝 License
 MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
 ## ⚙️ Contributing
