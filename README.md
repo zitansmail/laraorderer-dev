@@ -47,35 +47,7 @@ php artisan migrate:ordered --reorder
 ```bash
 php artisan migrate:ordered --run
 ```
-## ⚙️ How It Works
-### Dependency Detection
-Scans migration files for:
-- `$table->foreignId()`
-- `$table->foreign()`
-- `->references()`
-- `->on()`
-- `@depends` docblock tags
-### Processing Workflow
-```mermaid
-graph LR
-    A[Scan migrations] --> B[Build dependency graph]
-    B --> C{Detect circular deps?}
-    C -- Yes --> D[Throw exception]
-    C -- No --> E[Topological sort]
-    E --> F{User options}
-    F -- --dry-run --> G[Show execution plan]
-    F -- --reorder --> H[Rename files + Update DB]
-    F -- --run --> I[Execute migrations]
-```
-### File Renaming Example
-```
-Original:
-2023_01_15_000000_create_posts_table.php
-2023_01_10_000000_create_users_table.php
-After --reorder:
-2023_01_09_000000_create_users_table.php
-2023_01_10_000000_create_posts_table.php
-```
+
 ## ⚠️ Best Practices
 1. **Always preview** with `--dry-run` before executing changes
 2. **Commit your work** before using `--reorder` or `--run`
