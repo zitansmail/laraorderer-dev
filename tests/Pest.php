@@ -1,5 +1,7 @@
 <?php
 
-use MigrationOrderer\Tests\TestCase;
+use Tests\TestCase;
+
 
 uses(TestCase::class)->in('Feature', 'Unit');
+
