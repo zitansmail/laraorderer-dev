@@ -1,6 +1,6 @@
 <?php
 
-namespace MigrationOrderer\Tests\Support;
+namespace Tests\Support;
 
 use Illuminate\Filesystem\Filesystem;
 

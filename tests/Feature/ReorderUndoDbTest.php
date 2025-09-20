@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
-use MigrationOrderer\Tests\Support\Temp;
+use Tests\Support\Temp;
 use Illuminate\Filesystem\Filesystem;
 
 it('stores manifest rows on reorder and can undo them', function () {

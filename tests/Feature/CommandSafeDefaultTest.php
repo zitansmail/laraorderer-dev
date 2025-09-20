@@ -1,14 +1,13 @@
 <?php
 
 use Illuminate\Support\Facades\Artisan;
-use MigrationOrderer\Tests\Support\Temp;
+use Tests\Support\Temp;
 use Illuminate\Filesystem\Filesystem;
 
 it('shows order but takes no action by default', function () {
     $fs = new Filesystem();
     $dir = Temp::makeMigrationsDir();
 
-    // create two dummy migrations (content irrelevant for preview)
     $fs->put($dir.'/2023_01_01_000000_create_roles_table.php', "<?php\n");
     $fs->put($dir.'/2023_01_01_000001_create_users_table.php', "<?php\n");
 
@@ -21,5 +20,5 @@ it('shows order but takes no action by default', function () {
     expect($exit)->toBe(0);
     expect($output)->toContain('Scanning migrations...');
     expect($output)->toContain('Computing topological order...');
-    expect($output)->toContain('Safe mode: no action taken'); // message from your command
+    expect($output)->toContain('Safe mode: no action taken');
 });

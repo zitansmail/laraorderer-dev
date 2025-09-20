@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('migration_orderer', function(Blueprint $table) {
             $table->id();
-            $table->string('from');   // original filename
-            $table->string('to');     // renamed filename
+            $table->string('from');
+            $table->string('to');
             $table->timestamp('created_at')->useCurrent();
         });
 

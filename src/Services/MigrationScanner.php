@@ -18,7 +18,6 @@ class MigrationScanner
         $tableToFile = [];
         $metadataList = [];
 
-        // 1st pass: Map tables created to filenames
         foreach ($files as $file) {
             $content = file_get_contents($file);
             if (preg_match("/Schema::create\(['\"](\w+)['\"]/", $content, $match)) {
@@ -26,7 +25,6 @@ class MigrationScanner
             }
         }
 
-        // 2nd pass: Extract dependencies
         foreach ($files as $file) {
             $content = file_get_contents($file);
             $dependsOn = [];

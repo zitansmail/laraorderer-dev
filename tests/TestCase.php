@@ -1,6 +1,6 @@
 <?php
 
-namespace MigrationOrderer\Tests;
+namespace Tests;
 
 use Orchestra\Testbench\TestCase as BaseTestCase;
 use MigrationOrderer\MigrationOrdererServiceProvider;
@@ -16,7 +16,6 @@ class TestCase extends BaseTestCase
 
     protected function getEnvironmentSetUp($app)
     {
-        // sqlite in-memory
         $app['config']->set('database.default', 'testing');
         $app['config']->set('database.connections.testing', [
             'driver'   => 'sqlite',
@@ -29,7 +28,6 @@ class TestCase extends BaseTestCase
     {
         parent::setUp(); // <<< IMPORTANT: boot the app first
 
-        // Create Laravel "migrations" table used by migrator
         if (!Schema::hasTable('migrations')) {
             Schema::create('migrations', function (Blueprint $table) {
                 $table->id();
@@ -38,7 +36,6 @@ class TestCase extends BaseTestCase
             });
         }
 
-        // Your package’s DB-backed manifest table
         if (!Schema::hasTable('migration_orderer')) {
             Schema::create('migration_orderer', function (Blueprint $table) {
                 $table->id();
