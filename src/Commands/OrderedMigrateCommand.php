@@ -2,7 +2,6 @@
 
 namespace MigrationOrderer\Commands;
 
-use Exception;
 use Illuminate\Console\Command;
 use MigrationOrderer\Services\MigrationScanner;
 use MigrationOrderer\Services\DependencyGraphBuilder;
@@ -13,66 +12,66 @@ use Throwable;
 
 class OrderedMigrateCommand extends Command
 {
-    protected $signature = 'migrate:ordered 
-                            {--preview : Preview the order of migrations} 
-                            {--json : Output as JSON} 
-                            {--path= : Path to migration files} 
-                            {--reorder : Reorder migration filenames based on dependencies}';
+    protected $signature = 'migrate:ordered
+        {--path=database/migrations : Path to migrations directory}
+        {--preview : Show computed order without executing}
+        {--reorder : Rename migration files to enforce order}
+        {--undo-last : Undo the last reorder using the saved manifest}
+        {--force : Bypass confirmation in non-interactive/CI environments}
+    ';
 
-    protected $description = 'Run migrations in dependency-safe order or reorder migration files';
+    protected $description = 'Compute dependency-safe order. Use --run to execute, --reorder to rename, --undo-last to restore. Safe by default.';
 
-    public function handle()
-    {
-        $path = $this->option('path') ?? database_path('migrations');
-
-        $scanner      = new MigrationScanner();
-        $graphBuilder = new DependencyGraphBuilder();
-        $sorter       = new TopologicalSorter();
-        $runner       = new MigrationRunner();
-        $renamer      = new MigrationRenamer();
+    public function handle(
+        MigrationScanner $scanner,
+        DependencyGraphBuilder $graphBuilder,
+        TopologicalSorter $sorter,
+        MigrationRunner $runner,
+        MigrationRenamer $renamer
+    ) {
+        $path = base_path($this->option('path'));
 
         try {
+            $this->info('Scanning migrations...');
             $metadataList = $scanner->scan($path);
-        } catch (Exception $e) {
-            $this->error("⛔ {$e->getMessage()}");
-            $this->line('Tip: pass a valid directory with --path="/full/path/to/migrations"');
-            return self::FAILURE;
-        } catch (Throwable $e) {
-            $this->error('Unexpected error while scanning migrations: ' . $e->getMessage());
-            return self::FAILURE;
-        }
 
-        $graph   = $graphBuilder->build($metadataList);
-        $ordered = $sorter->sort($graph);
+            $this->info('Building dependency graph...');
+            $graph = $graphBuilder->build($metadataList);
 
-        if ($this->option('preview') || $this->option('json')) {
-            $data = array_map(fn ($file) => $metadataList[$file] ?? null, $ordered);
+            $this->info('Computing topological order...');
+            $ordered = $sorter->sort($graph);
 
-            if ($this->option('json')) {
-                $this->line(json_encode($data, JSON_PRETTY_PRINT));
-            } else {
-                foreach ($data as $meta) {
-                    $this->line("📄 {$meta->filename}");
-                    foreach ($meta->dependsOn as $d) {
-                        $this->line("   ↳ depends on " . basename($d));
-                    }
-                    foreach ($meta->missing as $missingEntry) {
-                        $this->warn("   ⚠️ Missing: $missingEntry");
-                    }
-                }
+            $this->table(['#', 'File'], array_map(function ($f, $i) {
+                return [$i + 1, $f];
+            }, $ordered, array_keys($ordered)));
+
+            // Non-destructive defaults:
+            if ($this->option('preview') || (!$this->option('reorder') && $this->option('undo-last') === false)) {
+                $this->comment('Safe mode: no action taken. Use --run to execute, --reorder to rename, or --undo-last to restore.');
+                return self::SUCCESS;
             }
 
+            if ($this->option('undo-last')) {
+                $renamer->undoLast($this);
+                return self::SUCCESS;
+            }
+
+            if ($this->option('reorder')) {
+                if (!$this->option('force') && !$this->confirm('This will rename files. Continue?')) {
+                    $this->warn('Aborted.');
+                    return self::SUCCESS;
+                }
+                $renamer->reorder($ordered, $metadataList, $path, $this);
+                return self::SUCCESS;
+            }
+
+            // Fallback if multiple flags omitted
+            $this->comment('No action chosen. Use --run, --reorder, or --undo-last.');
             return self::SUCCESS;
+
+        } catch (Throwable $e) {
+            $this->error('Unexpected Error' . PHP_EOL . $e->getMessage());
+            return self::FAILURE;
         }
-
-        if ($this->option('reorder')) {
-            $renamer->reorder($ordered, $metadataList, $path, $this);
-            return self::SUCCESS;
-        }
-
-        $runner->runMigrations($ordered);
-        $this->info("✅ All migrations ran successfully.");
-
-        return self::SUCCESS;
     }
 }

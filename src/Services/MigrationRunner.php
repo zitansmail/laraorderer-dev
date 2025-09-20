@@ -19,11 +19,11 @@ class MigrationRunner
             $migrationName = Str::before($filename, '.php');
 
             if (DB::table('migrations')->where('migration', $migrationName)->exists()) {
-                echo "⏭️ Skipping: $filename\n";
+                echo "Skipping: $filename\n";
                 continue;
             }
 
-            echo "⚙️ Running: $filename\n";
+            echo "Running: $filename\n";
             $migration = require $file;
             $migration->up();
 

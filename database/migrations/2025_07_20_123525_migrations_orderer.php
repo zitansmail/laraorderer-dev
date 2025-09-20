@@ -13,7 +13,9 @@ return new class extends Migration
     {
         Schema::create('migration_orderer', function(Blueprint $table) {
             $table->id();
-            $table->string('test');
+            $table->string('from');   // original filename
+            $table->string('to');     // renamed filename
+            $table->timestamp('created_at')->useCurrent();
         });
 
     }
