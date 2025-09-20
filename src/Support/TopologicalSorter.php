@@ -4,24 +4,34 @@ namespace MigrationOrderer\Support;
 
 class TopologicalSorter
 {
+    
+    private array $graph = [];
+    private array $visited = [];
+    private array $sorted = [];
     public function sort(array $graph): array
     {
-        $visited = [];
-        $sorted = [];
-
-        $visit = function ($node) use (&$visit, &$visited, &$sorted, $graph) {
-            if (isset($visited[$node])) return;
-            $visited[$node] = true;
-            foreach ($graph[$node] ?? [] as $dep) {
-                $visit($dep);
-            }
-            $sorted[] = $node;
-        };
+        $this->graph = $graph;
+        $this->visited = [];
+        $this->sorted = [];
 
         foreach (array_keys($graph) as $node) {
-            $visit($node);
+            $this->visit($node);
+        }
+        return $this->sorted;
+    }
+
+    private function visit(string $node): void
+    {
+        if (isset($this->visited[$node])) {
+            return;
         }
 
-        return $sorted;
+        $this->visited[$node] = true;
+
+        foreach ($this->graph[$node] ?? [] as $dep) {
+            $this->visit($dep);
+        }
+
+        $this->sorted[] = $node;
     }
 }

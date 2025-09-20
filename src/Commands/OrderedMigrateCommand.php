@@ -2,12 +2,14 @@
 
 namespace MigrationOrderer\Commands;
 
+use Exception;
 use Illuminate\Console\Command;
 use MigrationOrderer\Services\MigrationScanner;
 use MigrationOrderer\Services\DependencyGraphBuilder;
 use MigrationOrderer\Support\TopologicalSorter;
 use MigrationOrderer\Services\MigrationRunner;
 use MigrationOrderer\Services\MigrationRenamer;
+use Throwable;
 
 class OrderedMigrateCommand extends Command
 {
@@ -23,21 +25,28 @@ class OrderedMigrateCommand extends Command
     {
         $path = $this->option('path') ?? database_path('migrations');
 
-        $scanner = new MigrationScanner();
+        $scanner      = new MigrationScanner();
         $graphBuilder = new DependencyGraphBuilder();
-        $sorter = new TopologicalSorter();
-        $runner = new MigrationRunner();
-        $renamer = new MigrationRenamer();
+        $sorter       = new TopologicalSorter();
+        $runner       = new MigrationRunner();
+        $renamer      = new MigrationRenamer();
 
-        $metadataList = $scanner->scan($path);
-        // dd($metadataList);
+        try {
+            $metadataList = $scanner->scan($path);
+        } catch (Exception $e) {
+            $this->error("⛔ {$e->getMessage()}");
+            $this->line('Tip: pass a valid directory with --path="/full/path/to/migrations"');
+            return self::FAILURE;
+        } catch (Throwable $e) {
+            $this->error('Unexpected error while scanning migrations: ' . $e->getMessage());
+            return self::FAILURE;
+        }
 
-        $graph = $graphBuilder->build($metadataList);
+        $graph   = $graphBuilder->build($metadataList);
         $ordered = $sorter->sort($graph);
 
         if ($this->option('preview') || $this->option('json')) {
-            $data = array_map(fn($file) => $metadataList[$file] ?? null, $ordered);
-
+            $data = array_map(fn ($file) => $metadataList[$file] ?? null, $ordered);
 
             if ($this->option('json')) {
                 $this->line(json_encode($data, JSON_PRETTY_PRINT));
@@ -53,15 +62,17 @@ class OrderedMigrateCommand extends Command
                 }
             }
 
-            return;
+            return self::SUCCESS;
         }
 
         if ($this->option('reorder')) {
             $renamer->reorder($ordered, $metadataList, $path, $this);
-            return;
+            return self::SUCCESS;
         }
 
         $runner->runMigrations($ordered);
         $this->info("✅ All migrations ran successfully.");
+
+        return self::SUCCESS;
     }
 }
